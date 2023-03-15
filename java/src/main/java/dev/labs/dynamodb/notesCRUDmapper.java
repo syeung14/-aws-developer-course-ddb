@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class notesCRUDmapper {
+
     static AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
             .build();
 
@@ -36,7 +37,7 @@ public class notesCRUDmapper {
 
         // TODO 1 BEGIN
         // Define a DynamoDB mapper to associate to the instance of NotesItem class
-
+        DynamoDBMapper mapper = new DynamoDBMapper(client);
         // TODO 1 END
 
         testCRUDOperations(mapper);
@@ -49,29 +50,35 @@ public class notesCRUDmapper {
 
         // TODO 6 BEGIN
         // Instantiate NotesItem class to maps to the DynamoDB table. Definition of the class is partially provided to you
-        
+        NotesItems item = new NotesItems();
         // TODO 6 END
 
         // TODO 7 BEGIN
         // Set attribute values to UserId, NoteId, and Note using class methods
-        
+        item.setUserId("testuser");
+        item.setNoteId(1);
+        item.setNotes("this is my very first note");
         // TODO 7 END
 
         try {
             // TODO 8 BEGIN
             // Save the item (note) to Note Table.
-            
+            mapper.save(item);
             // TODO 8 END
 
 
             // TODO 9 BEGIN
             // Retrieve the item from Notes
-            
+            NotesItems itemRetrieved = mapper.load(NotesItems.class, "testuser", 1);
+            System.out.println("Item retrieved:");
+            System.out.println(itemRetrieved);
             // TODO 9 END
 
             // TODO 10 BEGIN
             // Update the item in Notes
-            
+            itemRetrieved.setNotes("updated notes");
+            // Save the updated attributes
+            mapper.save(itemRetrieved);
             // TODO 10 END
 
             System.out.println("Item updated:");
@@ -89,7 +96,8 @@ public class notesCRUDmapper {
 
             // TODO 11 BEGIN
             // Delete the item from Notes
-            
+            NotesItems deleteItem = mapper.load(NotesItems.class, "testuser", 1, config);
+            mapper.delete(deleteItem);
             // TODO 11 END
 
             System.out.println("deleting the previously existing item:");
@@ -134,10 +142,10 @@ public class notesCRUDmapper {
                 .withComparisonOperator("EQ");
 
         expectedAttributes.put("Note", expectedAttributeValue);
-        // TODO 12 BEGIN
+        // TODO 12  BEGIN
         // Update item using withExpected expression
-        
-        // TODO END
+        mapper.save(item, new DynamoDBSaveExpression().withExpected(expectedAttributes));
+        // TODO 12 END
 
         NotesItems itemUpdated = mapper.load(NotesItems.class, "newbie", 1);
         System.out.println("Item updated with new notes:");
@@ -146,7 +154,7 @@ public class notesCRUDmapper {
 
     // TODO 2 BEGIN
     // Define DynamoDB Table annotation to maps NotesItems class to DynamoDB table name Notes
-    
+    @DynamoDBTable(tableName = "Notes")
     // TODO 2 END
     public static class NotesItems {
 
@@ -155,9 +163,9 @@ public class notesCRUDmapper {
         private Integer NoteId;
         private String Note;
 
-        // TODO 3  BEGIN
+        // TODO 3 BEGIN
         // Define the primary key annotation on the attribute UserId
-        
+        @DynamoDBHashKey(attributeName = "UserId")
         // TODO 3 END
         public String getUserId() {
             return this.UserId;
@@ -169,7 +177,7 @@ public class notesCRUDmapper {
 
         // TODO 4 BEGIN
         // Define the sort key annotation on the attribute NoteId
-        
+        @DynamoDBRangeKey(attributeName = "NoteId")
         // TODO 4 END
         public Integer getNoteId() {
             return this.NoteId;
@@ -181,7 +189,7 @@ public class notesCRUDmapper {
 
         // TODO 5 BEGIN
         // Define an optional attribute annotation for Note
-        
+        @DynamoDBAttribute(attributeName = "Note")
         // TODO 5 END
         public String getNotes() {
             return this.Note;
@@ -196,4 +204,5 @@ public class notesCRUDmapper {
             return "Notes [User=" + UserId + ", Note Id=" + NoteId + ", Notes=" + Note + "]";
         }
     }
+
 }

@@ -38,6 +38,9 @@ public class notesLoadData {
         String tablename = config.getTableName();
 
         // TODO 0 BEGIN
+        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
+
+        DynamoDB dynamoDB = new DynamoDB(client);
         
         // TODO 0 END
         
@@ -65,7 +68,11 @@ public class notesLoadData {
             //Load data into table
             try {
                 // TODO 1 BEGIN
-                
+                table.putItem(
+                        new Item()
+                                .withPrimaryKey("UserId", userId, "NoteId", noteId)
+                                .withString("Note", note)
+                );
                 // TODO 1 END
                 
                 System.out.println("PutItem succeeded: " + userId + " " + noteId + " " + note);
